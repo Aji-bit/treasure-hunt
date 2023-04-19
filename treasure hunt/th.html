@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Treasure Hunt Game</title>
+    <style>
+      body {
+        font-family: sans-serif;
+      }
+      #map {
+        position: relative;
+        width: 800px;
+        height: 800px;
+        background-image: url("map.png");
+        background-size: cover;
+      }
+      .treasure {
+        position: absolute;
+        width: 50px;
+        height: 50px;
+        background-image: url("treasure.png");
+        background-size: cover;
+        display: none;
+      }
+      #level {
+        font-size: 24px;
+        margin-bottom: 20px;
+      }
+      #timer {
+        font-size: 24px;
+        margin-bottom: 20px;
+      }
+      #score {
+        font-size: 24px;
+        margin-bottom: 20px;
+      }
+      #message {
+        font-size: 24px;
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Treasure Hunt Game</h1>
+    <div id="map">
+      <div class="treasure" style="top: 200px; left: 300px"></div>
+      <div class="treasure" style="top: 100px; left: 400px"></div>
+      <div class="treasure" style="top: 300px; left: 150px"></div>
+      <div class="treasure" style="top: 400px; left: 250px"></div>
+      <div class="treasure" style="top: 450px; left: 450px"></div>
+    </div>
+    <div id="level"></div>
+    <div id="timer"></div>
+    <div id="score"></div>
+    <div id="message"></div>
+    <script>
+      // Game settings
+      const NUM_LEVELS = 5;
+      const LEVEL_TIME = 30; // seconds
+      const LEVEL_SCORE = 1000;
+
+      // Game state
+      let level = 1;
+      let score = 0;
+      let timerId = null;
+      let startTime = null;
+      let endTime = null;
+      let message = null;
+
+      // Elements
+      const map = document.getElementById("map");
+      const treasures = document.querySelectorAll(".treasure");
+      const levelElement = document.getElementById("level");
+      const timerElement = document.getElementById("timer");
+      const scoreElement = document.getElementById("score");
+      const messageElement = document.getElementById("message");
+
+      // Start the game
+      startGame();
+
+      // Functions
+      function startGame() {
+        level = 1;
+        score = 0;
+        message = null;
+        showLevel();
+        showScore();
+        showTimer();
+        showTreasures();
+      }
+
+      function showLevel() {
+        levelElement.textContent = `Level ${level}`;
+      }
+
+      function showScore() {
+        scoreElement.textContent = `Score: ${score}`;
+      }
+
+      function showTimer() {
+        timerElement.textContent = `Time left: ${LEVEL_TIME}`;
+        startTime = Date.now();
+        endTime = startTime + LEVEL_TIME * 1000;
+        timerId = setInterval(updateTimer, 1000);
+      }
+
+      function updateTimer() {
+        const remainingTime = Math.max(0, endTime - Date.now());
+        const seconds = Math.floor(remainingTime / 1000);
+        timerElement.textContent = `Time left: ${seconds} seconds`;
+        if (remainingTime <= 0) {
+          endLevel();
+        }
+      }
+
+      function showTreasures() {
+        treasures.forEach((treasure) => {
+          const top = Math.floor(
+            Math.random() * (map.clientHeight - treasure.clientHeight)
+          );
+          const left = Math.floor(
+            Math.random() * (map.clientWidth - treasure.clientWidth)
+          );
+          treasure.style.top = `${top}px`;
+          treasure.style.left = `${left}px`;
+          treasure.style.display = "block";
+          treasure.addEventListener("click", collectTreasure);
+        });
+      }
+
+      function collectTreasure(event) {
+        const treasure = event.target;
+        treasure.style.display = "none";
+        score += LEVEL_SCORE;
+        showScore();
+
+        if (treasuresCollected() === treasures.length) {
+          endLevel();
+        }
+      }
+
+      function treasuresCollected() {
+        let count = 0;
+        treasures.forEach((treasure) => {
+          if (treasure.style.display === "none") {
+            count++;
+          }
+        });
+        return count;
+      }
+
+      function endLevel() {
+        clearInterval(timerId);
+
+        if (level === NUM_LEVELS) {
+          endGame();
+        } else {
+          level++;
+          message = `Level ${level} completed!`;
+          setTimeout(() => {
+            showLevel();
+            showTimer();
+            showTreasures();
+            message = null;
+          }, 2000);
+        }
+      }
+
+      function endGame() {
+        message = `Game over! Final score: ${score}`;
+        showScore();
+        clearInterval(timerId);
+        treasures.forEach((treasure) => {
+          treasure.style.display = "none";
+          treasure.removeEventListener("click", collectTreasure);
+        });
+      }
+
+      // Update the message
+      setInterval(() => {
+        messageElement.textContent = message || "";
+      }, 100);
+    </script>
+  </body>
+</html>
